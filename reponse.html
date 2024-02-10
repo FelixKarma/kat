@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Data</title>
+</head>
+
+<body>
+    <h1>Données depuis Google Sheets</h1>
+    <ul id="dataList"></ul>
+
+    <script>
+        // URL de votre feuille de calcul Google Sheets
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/16KlLtmqNW7ekShyULF9oOh-M_eS9JH4qD2HV4oGl2aA/edit?usp=sharing';
+
+        // Fonction pour récupérer les données depuis Google Sheets
+        async function getDataFromGoogleSheets() {
+            try {
+                const response = await fetch(sheetUrl);
+                const data = await response.text();
+                return data;
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données :', error);
+                return null;
+            }
+        }
+
+        // Fonction pour extraire les données de la réponse HTML
+        function extractDataFromHTML(html) {
+            const table = document.createElement('table');
+            table.innerHTML = html;
+            const rows = Array.from(table.querySelectorAll('tr')); // Convertir en tableau
+            const dataList = [];
+            rows.slice(1, 6).forEach(row => { // Utiliser slice(1, 6) pour inclure jusqu'à la 5ème ligne
+                const firstCell = row.querySelector('td'); // Récupérer la première cellule de la ligne
+                if (!firstCell || !firstCell.textContent.trim()) { // Vérifier si le textContent de la première cellule est vide
+                    return; // Sortir de la boucle si vide
+                }
+
+                const rowData = [];
+                row.querySelectorAll('td').forEach((cell, key) => {
+                    if (key >= 4) {
+                        return;
+                    }
+                    const cellText = cell.textContent.trim(); // Utiliser trim() pour supprimer les espaces inutiles
+                    if (cellText === "") {
+                        return;
+                    }
+                    console.log(cell);
+                    rowData.push(cellText);
+                });
+                // console.log(rowData);
+                dataList.push(rowData);
+            });
+            return dataList;
+
+        }
+
+        // Fonction pour afficher les données sur la page
+        async function displayData() {
+            const dataList = document.getElementById('dataList');
+            const htmlData = await getDataFromGoogleSheets();
+            if (htmlData) {
+                const data = extractDataFromHTML(htmlData);
+                data.forEach(row => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = row.join(' | ');
+                    dataList.appendChild(listItem);
+                });
+            } else {
+                dataList.textContent = 'Aucune donnée disponible.';
+            }
+        }
+
+        // Appeler la fonction pour afficher les données au chargement de la page
+        displayData();
+    </script>
+</body>
+
+</html>
